@@ -6,12 +6,10 @@ import Spinner from '../Components/Spinner';
 function UserDetails() {
   const [data, setData] = useState([]);
   const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(true); // Loading state
+  const [loading, setLoading] = useState(true); 
   const [currentPage, setCurrentPage] = useState(1);
   const [dataPerPage] = useState(10);
-
-  console.log(data);
-  console.log(localStorage.getItem('token'))
+  const [isauth, setauth] = useState(false);
 
   const idxLast = currentPage * dataPerPage;
   const idxFirst = idxLast - dataPerPage;
@@ -25,16 +23,18 @@ function UserDetails() {
   function getData() {
     setLoading(true); 
     axios
-      .get('https://auth-backend-rsrp.onrender.com/api/users/userdetails',{
-         headers: {
-         Authorization: `Bearer ${localStorage.getItem('token')}`, 
-         },
+      .get('https://auth-backend-rsrp.onrender.com/api/users/userdetails', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`, 
+        },
       })
       .then((response) => {
         setData(response.data);
+        setauth(true);  // Set as authenticated if data fetch is successful
       })
       .catch((error) => {
         setError(error.message);
+        setauth(false); // Not authenticated if an error occurs
       })
       .finally(() => setLoading(false)); 
   }
@@ -58,11 +58,14 @@ function UserDetails() {
   return (
     <div className="container">
       <h2>User Details</h2>
+      {!isauth && !loading && (
+        <p className="login-prompt">Please log in to view user details.</p>
+      )}
       {loading ? (
         <Spinner />
       ) : error ? (
         <p className="error">Error: {error}</p>
-      ) : (
+      ) : isauth ? (
         <>
           <table className="user-table">
             <thead>
@@ -77,7 +80,7 @@ function UserDetails() {
               {currentItems.map((user) => (
                 <tr key={user.id}>
                   <td>{user.id}</td>
-                  <td>{user.name} </td>
+                  <td>{user.name}</td>
                   <td>{user.email}</td>
                   <td>{user.age}</td>
                 </tr>
@@ -102,7 +105,7 @@ function UserDetails() {
             </button>
           </div>
         </>
-      )}
+      ) : null}
     </div>
   );
 }
