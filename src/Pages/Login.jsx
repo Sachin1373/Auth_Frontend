@@ -17,12 +17,10 @@ function Login() {
       const response = await axios.post('https://auth-backend-rsrp.onrender.com/api/auth/login', 
         formData,
         { withCredentials: true });
-      console.log(response);
-      
-      const token = response.data.token;
+    
       
       if (token) {
-        localStorage.setItem('token', token);
+        
         toast.success("successfully loged in.");
         navigate('/');
       }
