@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
-import { NavLink,useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import '../Styles/Login.css';
 
 function Login() {
   const [formData, setFormData] = useState({ email: '', password: '' });
-  const navigate = useNavigate(); 
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
+    if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      const response = await axios.post('https://auth-backend-rsrp.onrender.com/api/auth/login', 
+      const response = await axios.post('https://auth-backend-rsrp.onrender.com/api/auth/login',
         formData,
         { withCredentials: true });
-    
-      
-      if (token) {
-        
-        toast.success("successfully loged in.");
+      setLoading(false);
+
+      if (response.status === 200) {
+        toast.success("Successfully logged in.");
         navigate('/');
       }
     } catch (error) {
+      setLoading(false);
       toast.error(error.response?.data?.message || 'Login failed');
     }
-    
   };
 
   return (
@@ -56,7 +65,9 @@ function Login() {
             required
           />
         </div>
-        <button type="submit" className="login-button">Log In</button>
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Log In'}
+        </button>
       </form>
       <p className="signup-link">
         Not signed up? <NavLink to="/signup">Sign up here</NavLink>
