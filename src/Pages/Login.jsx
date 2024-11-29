@@ -14,7 +14,9 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('https://auth-backend-rsrp.onrender.com/api/auth/login', formData);
+      const response = await axios.post('https://auth-backend-rsrp.onrender.com/api/auth/login', 
+        formData,
+        { withCredentials: true });
       console.log(response);
       
       const token = response.data.token;

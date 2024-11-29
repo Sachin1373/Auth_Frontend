@@ -14,7 +14,7 @@ function UserDetails() {
   const idxLast = currentPage * dataPerPage;
   const idxFirst = idxLast - dataPerPage;
   const currentItems = data?.slice(idxFirst, idxLast);
-  const totalPages = Math.ceil(data.length / dataPerPage);
+  const totalPages = data.length > 0 ? Math.ceil(data.length / dataPerPage) : 1;
 
   useEffect(() => {
     getData();
@@ -24,17 +24,19 @@ function UserDetails() {
     setLoading(true); 
     axios
       .get('https://auth-backend-rsrp.onrender.com/api/users/userdetails', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`, 
-        },
+        withCredentials: true,
       })
       .then((response) => {
         setData(response.data);
-        setauth(true);  // Set as authenticated if data fetch is successful
+        setauth(true);
       })
       .catch((error) => {
-        setError(error.message);
-        setauth(false); // Not authenticated if an error occurs
+        if (error.response?.status === 401) {
+          setError("Unauthorized. Please log in.");
+          setauth(false);
+        } else {
+          setError(error.message || "An error occurred.");
+        }
       })
       .finally(() => setLoading(false)); 
   }
@@ -65,7 +67,7 @@ function UserDetails() {
         <Spinner />
       ) : error ? (
         <p className="error">Error: {error}</p>
-      ) : isauth ? (
+      ) : isauth && data.length > 0 ? (
         <>
           <table className="user-table">
             <thead>
@@ -88,7 +90,7 @@ function UserDetails() {
             </tbody>
           </table>
           <div className="pagination">
-            <button className="prev" onClick={handlePrev} disabled={currentPage === 1}>
+            <button className="prev" onClick={handlePrev} disabled={currentPage === 1} aria-label="Previous Page">
               Prev
             </button>
             {Array.from({ length: totalPages }, (_, index) => (
@@ -96,16 +98,19 @@ function UserDetails() {
                 key={index}
                 onClick={() => handlePageChange(index + 1)}
                 className={currentPage === index + 1 ? 'active' : ''}
+                aria-label={`Page ${index + 1}`}
               >
                 {index + 1}
               </button>
             ))}
-            <button className="next" onClick={handleNext} disabled={currentPage === totalPages}>
+            <button className="next" onClick={handleNext} disabled={currentPage === totalPages} aria-label="Next Page">
               Next
             </button>
           </div>
         </>
-      ) : null}
+      ) : (
+        <p className="no-data">No user data available.</p>
+      )}
     </div>
   );
 }
